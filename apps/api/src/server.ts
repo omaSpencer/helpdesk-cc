@@ -1,25 +1,26 @@
-import Fastify from 'fastify';
-import cors from '@fastify/cors';
-import swagger from '@fastify/swagger';
-import swaggerUI from '@fastify/swagger-ui';
-import { registerTicketRoutes } from './routes/tickets';
-import { registerErrorHandler } from './errors/handler';
+import Fastify from "fastify";
+import cors from "@fastify/cors";
+import swagger from "@fastify/swagger";
+import swaggerUI from "@fastify/swagger-ui";
+import { registerTicketRoutes } from "./routes/tickets";
+import { registerErrorHandler } from "./errors/handler";
 
 const buildServer = async () => {
   const app = Fastify({ logger: true });
 
   app.register(cors, { origin: true });
+  // Register swagger BEFORE routes so it can hook into route registration
   app.register(swagger, {
     openapi: {
-      info: { title: 'Helpdesk API', version: '0.1.0' },
+      openapi: "3.0.3",
+      info: { title: "Helpdesk API", version: "0.1.0" },
     },
   });
-  app.register(swaggerUI, { routePrefix: '/docs' });
-
-  app.get('/health', async () => ({ status: 'ok' }));
+  app.get("/health", async () => ({ status: "ok" }));
 
   registerErrorHandler(app);
   await registerTicketRoutes(app);
+  app.register(swaggerUI, { routePrefix: "/docs" });
 
   return app;
 };
@@ -28,7 +29,7 @@ const start = async () => {
   const app = await buildServer();
   try {
     await app.ready();
-    await app.listen({ port: Number(process.env.PORT) || 3000, host: '0.0.0.0' });
+    await app.listen({ port: Number(process.env.PORT) || 3000, host: "0.0.0.0" });
   } catch (err) {
     app.log.error(err);
     process.exit(1);

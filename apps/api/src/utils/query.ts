@@ -1,6 +1,6 @@
-import { Prisma } from '@prisma/client';
-import { ListQueryDTOSchema } from '@helpdesk/shared';
-import { z } from 'zod';
+import { Prisma } from "@prisma/client";
+import { ListQueryDTOSchema } from "@helpdesk/shared";
+import { z } from "zod";
 
 export type ListQuery = z.infer<typeof ListQueryDTOSchema>;
 
@@ -22,8 +22,8 @@ export function buildListQuery(q: ListQuery) {
     where.priority = q.priority as any;
   }
 
-  const sortBy = q.sortBy || 'createdAt';
-  const sortOrder = (q.sortOrder || 'desc') as 'asc' | 'desc';
+  const sortBy = q.sortBy || "createdAt";
+  const sortOrder = (q.sortOrder || "desc") as "asc" | "desc";
   (orderBy as any)[sortBy] = sortOrder;
 
   const page = q.page ?? 1;
@@ -38,5 +38,3 @@ export function buildPaginationMeta(total: number, page: number, pageSize: numbe
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   return { total, page, pageSize, totalPages };
 }
-
-

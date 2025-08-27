@@ -4,11 +4,11 @@ import {
   CreateCommentDTOSchema,
   CreateTicketDTOSchema,
   ListQueryDTOSchema,
-  TicketSchema,
   UpdateTicketDTOSchema,
 } from "@helpdesk/shared";
 import { getPrisma } from "../db";
 import { buildListQuery, buildPaginationMeta } from "../utils/query";
+import { ErrorResponseSchema, zodToFastifySchema } from "../utils/schema";
 
 const ParamsId = z.object({ id: z.uuid() });
 
@@ -21,17 +21,13 @@ export async function registerTicketRoutes(app: FastifyInstance) {
     {
       schema: {
         summary: "List tickets",
-        querystring: ListQueryDTOSchema as any,
+        tags: ["tickets"],
+        // Use permissive schema for Fastify; Zod will validate inside handler
+        querystring: { type: "object", additionalProperties: true } as any,
         response: {
-          200: z.object({
-            items: z.array(TicketSchema),
-            page: z.number(),
-            pageSize: z.number(),
-            total: z.number(),
-            totalPages: z.number(),
-          }) as any,
-          400: z.object({ error: z.object({ code: z.string(), message: z.string(), details: z.any().optional() }), requestId: z.string().optional() }) as any,
-          500: z.object({ error: z.object({ code: z.string(), message: z.string(), details: z.any().optional() }), requestId: z.string().optional() }) as any,
+          200: { type: "object", additionalProperties: true } as any,
+          400: ErrorResponseSchema as any,
+          500: ErrorResponseSchema as any,
         },
       },
     },
@@ -53,11 +49,12 @@ export async function registerTicketRoutes(app: FastifyInstance) {
     {
       schema: {
         summary: "Get ticket by id",
-        params: ParamsId as any,
+        tags: ["tickets"],
+        params: zodToFastifySchema(ParamsId) as any,
         response: {
-          200: z.object({ ticket: TicketSchema, comments: z.array(z.any()) }) as any,
-          404: z.object({ error: z.object({ code: z.string(), message: z.string() }), requestId: z.string().optional() }) as any,
-          500: z.object({ error: z.object({ code: z.string(), message: z.string() }), requestId: z.string().optional() }) as any,
+          200: { type: "object", additionalProperties: true } as any,
+          404: ErrorResponseSchema as any,
+          500: ErrorResponseSchema as any,
         },
       },
     },
@@ -65,7 +62,10 @@ export async function registerTicketRoutes(app: FastifyInstance) {
       const { id } = ParamsId.parse(request.params);
       const ticket = await prisma.ticket.findUnique({ where: { id } });
       if (!ticket)
-        return reply.status(404 as any).send({ error: { code: "NOT_FOUND", message: "Ticket not found" }, requestId: String(request.id) });
+        return reply.status(404 as any).send({
+          error: { code: "NOT_FOUND", message: "Ticket not found" },
+          requestId: String(request.id),
+        });
       const comments = await prisma.comment.findMany({
         where: { ticketId: id },
         orderBy: { createdAt: "asc" },
@@ -80,8 +80,13 @@ export async function registerTicketRoutes(app: FastifyInstance) {
     {
       schema: {
         summary: "Create ticket",
-        body: CreateTicketDTOSchema as any,
-        response: { 201: TicketSchema as any },
+        tags: ["tickets"],
+        body: zodToFastifySchema(CreateTicketDTOSchema) as any,
+        response: {
+          201: { type: "object", additionalProperties: true } as any,
+          400: ErrorResponseSchema as any,
+          409: ErrorResponseSchema as any,
+        },
       },
     },
     async (request, reply) => {
@@ -106,12 +111,13 @@ export async function registerTicketRoutes(app: FastifyInstance) {
     {
       schema: {
         summary: "Update ticket",
-        params: ParamsId as any,
-        body: UpdateTicketDTOSchema as any,
+        tags: ["tickets"],
+        params: zodToFastifySchema(ParamsId) as any,
+        body: zodToFastifySchema(UpdateTicketDTOSchema) as any,
         response: {
-          200: TicketSchema as any,
-          404: z.object({ error: z.object({ code: z.string(), message: z.string() }), requestId: z.string().optional() }) as any,
-          400: z.object({ error: z.object({ code: z.string(), message: z.string(), details: z.any().optional() }), requestId: z.string().optional() }) as any,
+          200: { type: "object", additionalProperties: true } as any,
+          404: ErrorResponseSchema as any,
+          400: ErrorResponseSchema as any,
         },
       },
     },
@@ -122,7 +128,10 @@ export async function registerTicketRoutes(app: FastifyInstance) {
         const updated = await prisma.ticket.update({ where: { id }, data });
         return updated;
       } catch (e) {
-        return reply.status(404 as any).send({ error: { code: "NOT_FOUND", message: "Ticket not found" }, requestId: String(request.id) });
+        return reply.status(404 as any).send({
+          error: { code: "NOT_FOUND", message: "Ticket not found" },
+          requestId: String(request.id),
+        });
       }
     }
   );
@@ -133,10 +142,11 @@ export async function registerTicketRoutes(app: FastifyInstance) {
     {
       schema: {
         summary: "Delete ticket",
-        params: ParamsId as any,
+        tags: ["tickets"],
+        params: zodToFastifySchema(ParamsId) as any,
         response: {
-          204: z.null() as any,
-          404: z.object({ error: z.object({ code: z.string(), message: z.string() }), requestId: z.string().optional() }) as any,
+          204: { type: "null" } as any,
+          404: ErrorResponseSchema as any,
         },
       },
     },
@@ -145,7 +155,10 @@ export async function registerTicketRoutes(app: FastifyInstance) {
       try {
         await prisma.ticket.delete({ where: { id } });
       } catch (e) {
-        return reply.status(404 as any).send({ error: { code: "NOT_FOUND", message: "Ticket not found" }, requestId: String(request.id) });
+        return reply.status(404 as any).send({
+          error: { code: "NOT_FOUND", message: "Ticket not found" },
+          requestId: String(request.id),
+        });
       }
       reply.code(204);
       return null;
@@ -158,12 +171,13 @@ export async function registerTicketRoutes(app: FastifyInstance) {
     {
       schema: {
         summary: "Add comment to ticket",
-        params: ParamsId as any,
-        body: CreateCommentDTOSchema as any,
+        tags: ["tickets"],
+        params: zodToFastifySchema(ParamsId) as any,
+        body: zodToFastifySchema(CreateCommentDTOSchema) as any,
         response: {
-          201: z.any() as any,
-          404: z.object({ error: z.object({ code: z.string(), message: z.string() }), requestId: z.string().optional() }) as any,
-          400: z.object({ error: z.object({ code: z.string(), message: z.string(), details: z.any().optional() }), requestId: z.string().optional() }) as any,
+          201: { type: "object", additionalProperties: true } as any,
+          404: ErrorResponseSchema as any,
+          400: ErrorResponseSchema as any,
         },
       },
     },
@@ -172,7 +186,10 @@ export async function registerTicketRoutes(app: FastifyInstance) {
       const data = CreateCommentDTOSchema.parse(request.body);
       const ticket = await prisma.ticket.findUnique({ where: { id } });
       if (!ticket)
-        return reply.status(404 as any).send({ error: { code: "NOT_FOUND", message: "Ticket not found" }, requestId: String(request.id) });
+        return reply.status(404 as any).send({
+          error: { code: "NOT_FOUND", message: "Ticket not found" },
+          requestId: String(request.id),
+        });
       const comment = await prisma.comment.create({ data: { ticketId: id, ...data } });
       reply.code(201);
       return comment;
