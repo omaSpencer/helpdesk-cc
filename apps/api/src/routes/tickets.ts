@@ -30,6 +30,8 @@ export async function registerTicketRoutes(app: FastifyInstance) {
             total: z.number(),
             totalPages: z.number(),
           }) as any,
+          400: z.object({ error: z.object({ code: z.string(), message: z.string(), details: z.any().optional() }), requestId: z.string().optional() }) as any,
+          500: z.object({ error: z.object({ code: z.string(), message: z.string(), details: z.any().optional() }), requestId: z.string().optional() }) as any,
         },
       },
     },
@@ -54,7 +56,8 @@ export async function registerTicketRoutes(app: FastifyInstance) {
         params: ParamsId as any,
         response: {
           200: z.object({ ticket: TicketSchema, comments: z.array(z.any()) }) as any,
-          404: z.object({ code: z.string(), message: z.string() }) as any,
+          404: z.object({ error: z.object({ code: z.string(), message: z.string() }), requestId: z.string().optional() }) as any,
+          500: z.object({ error: z.object({ code: z.string(), message: z.string() }), requestId: z.string().optional() }) as any,
         },
       },
     },
@@ -62,7 +65,7 @@ export async function registerTicketRoutes(app: FastifyInstance) {
       const { id } = ParamsId.parse(request.params);
       const ticket = await prisma.ticket.findUnique({ where: { id } });
       if (!ticket)
-        return reply.status(404 as any).send({ code: "NOT_FOUND", message: "Ticket not found" });
+        return reply.status(404 as any).send({ error: { code: "NOT_FOUND", message: "Ticket not found" }, requestId: String(request.id) });
       const comments = await prisma.comment.findMany({
         where: { ticketId: id },
         orderBy: { createdAt: "asc" },
@@ -107,7 +110,8 @@ export async function registerTicketRoutes(app: FastifyInstance) {
         body: UpdateTicketDTOSchema as any,
         response: {
           200: TicketSchema as any,
-          404: z.object({ code: z.string(), message: z.string() }) as any,
+          404: z.object({ error: z.object({ code: z.string(), message: z.string() }), requestId: z.string().optional() }) as any,
+          400: z.object({ error: z.object({ code: z.string(), message: z.string(), details: z.any().optional() }), requestId: z.string().optional() }) as any,
         },
       },
     },
@@ -118,7 +122,7 @@ export async function registerTicketRoutes(app: FastifyInstance) {
         const updated = await prisma.ticket.update({ where: { id }, data });
         return updated;
       } catch (e) {
-        return reply.status(404 as any).send({ code: "NOT_FOUND", message: "Ticket not found" });
+        return reply.status(404 as any).send({ error: { code: "NOT_FOUND", message: "Ticket not found" }, requestId: String(request.id) });
       }
     }
   );
@@ -132,7 +136,7 @@ export async function registerTicketRoutes(app: FastifyInstance) {
         params: ParamsId as any,
         response: {
           204: z.null() as any,
-          404: z.object({ code: z.string(), message: z.string() }) as any,
+          404: z.object({ error: z.object({ code: z.string(), message: z.string() }), requestId: z.string().optional() }) as any,
         },
       },
     },
@@ -141,7 +145,7 @@ export async function registerTicketRoutes(app: FastifyInstance) {
       try {
         await prisma.ticket.delete({ where: { id } });
       } catch (e) {
-        return reply.status(404 as any).send({ code: "NOT_FOUND", message: "Ticket not found" });
+        return reply.status(404 as any).send({ error: { code: "NOT_FOUND", message: "Ticket not found" }, requestId: String(request.id) });
       }
       reply.code(204);
       return null;
@@ -158,7 +162,8 @@ export async function registerTicketRoutes(app: FastifyInstance) {
         body: CreateCommentDTOSchema as any,
         response: {
           201: z.any() as any,
-          404: z.object({ code: z.string(), message: z.string() }) as any,
+          404: z.object({ error: z.object({ code: z.string(), message: z.string() }), requestId: z.string().optional() }) as any,
+          400: z.object({ error: z.object({ code: z.string(), message: z.string(), details: z.any().optional() }), requestId: z.string().optional() }) as any,
         },
       },
     },
@@ -167,7 +172,7 @@ export async function registerTicketRoutes(app: FastifyInstance) {
       const data = CreateCommentDTOSchema.parse(request.body);
       const ticket = await prisma.ticket.findUnique({ where: { id } });
       if (!ticket)
-        return reply.status(404 as any).send({ code: "NOT_FOUND", message: "Ticket not found" });
+        return reply.status(404 as any).send({ error: { code: "NOT_FOUND", message: "Ticket not found" }, requestId: String(request.id) });
       const comment = await prisma.comment.create({ data: { ticketId: id, ...data } });
       reply.code(201);
       return comment;

@@ -5,7 +5,7 @@ import swaggerUI from '@fastify/swagger-ui';
 import { registerTicketRoutes } from './routes/tickets';
 import { registerErrorHandler } from './errors/handler';
 
-const buildServer = () => {
+const buildServer = async () => {
   const app = Fastify({ logger: true });
 
   app.register(cors, { origin: true });
@@ -19,15 +19,13 @@ const buildServer = () => {
   app.get('/health', async () => ({ status: 'ok' }));
 
   registerErrorHandler(app);
-  registerTicketRoutes(app).then(() => {
-    app.log.info('Routes registered');
-  });
+  await registerTicketRoutes(app);
 
   return app;
 };
 
 const start = async () => {
-  const app = buildServer();
+  const app = await buildServer();
   try {
     await app.ready();
     await app.listen({ port: Number(process.env.PORT) || 3000, host: '0.0.0.0' });
