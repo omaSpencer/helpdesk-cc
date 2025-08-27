@@ -3,22 +3,44 @@ import { Link, useSearchParams } from "react-router-dom";
 import { fetchJson } from "../../lib/api";
 import { ListQueryDTOSchema, TicketSchema } from "@helpdesk/shared";
 import { z } from "zod";
+import { FiltersBar } from "../../components/FiltersBar";
+import { Pagination } from "../../components/Pagination";
 
 export function TicketsListPage() {
   const [params] = useSearchParams();
-  const parsed = ListQueryDTOSchema.safeParse({
+
+  const raw = {
     q: params.get("q") || undefined,
-    status: params.getAll("status"),
-    priority: (params.get("priority") || undefined) as any,
-    sortBy: (params.get("sortBy") || undefined) as any,
-    sortOrder: (params.get("sortOrder") || undefined) as any,
+    status: params.getAll("status")?.filter(Boolean) ?? [],
+    priority: params.get("priority") || undefined,
+    sortBy: params.get("sortBy") || undefined,
+    sortOrder: params.get("sortOrder") || undefined,
     page: params.get("page") ? Number(params.get("page")) : undefined,
     pageSize: params.get("pageSize") ? Number(params.get("pageSize")) : undefined,
-  });
-  const key = ["tickets", parsed.success ? parsed.data : {}];
+  };
+
+  const parsed = ListQueryDTOSchema.safeParse(raw);
+
+  const queryKey = ["tickets", parsed.success ? parsed.data : {}];
+
   const { data, isLoading, error } = useQuery({
-    queryKey: key,
-    queryFn: () => fetchJson("/tickets"),
+    queryKey,
+    queryFn: () =>
+      fetchJson(
+        "/tickets?" +
+          new URLSearchParams(
+            Object.entries(raw).reduce((acc, [key, value]) => {
+              if (value === undefined) return acc;
+
+              if (Array.isArray(value)) {
+                value.forEach((v) => acc.append(key, v));
+              } else {
+                acc.set(key, String(value));
+              }
+              return acc;
+            }, new URLSearchParams())
+          ).toString()
+      ),
   });
 
   if (isLoading) return <div>Loading...</div>;
@@ -32,8 +54,11 @@ export function TicketsListPage() {
           New
         </Link>
       </div>
+
+      <FiltersBar />
+
       <ul style={{ display: "grid", gap: 8 }}>
-        {(data as any).items?.map((t: z.infer<typeof TicketSchema>) => (
+        {(data as any)?.items?.map((t: z.infer<typeof TicketSchema>) => (
           <li key={t.id} style={{ padding: 12, border: "1px solid #eee", borderRadius: 8 }}>
             <Link to={`/tickets/${t.id}`} style={{ fontWeight: 600 }}>
               {t.ticketNumber} — {t.title}
@@ -44,6 +69,8 @@ export function TicketsListPage() {
           </li>
         ))}
       </ul>
+
+      <Pagination page={(data as any)?.page} totalPages={(data as any)?.totalPages} />
     </div>
   );
 }

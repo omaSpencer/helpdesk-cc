@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { TicketPriority, TicketStatus } from '../types';
+import { z } from "zod";
+import { TicketPriority, TicketStatus } from "../types";
 
 export const TicketSchema = z.object({
   id: z.uuid(),
@@ -27,10 +27,18 @@ export const UpdateTicketDTOSchema = z.object({
 
 export const ListQueryDTOSchema = z.object({
   q: z.string().trim().min(1).optional(),
-  status: z.array(z.enum(TicketStatus)).optional(),
+  status: z.preprocess(
+    (val) =>
+      Array.isArray(val)
+        ? val.map((v: string) => v.toUpperCase())
+        : val
+          ? [(val as string).toUpperCase()]
+          : [],
+    z.array(z.enum(TicketStatus)).optional()
+  ),
   priority: z.enum(TicketPriority).optional(),
-  sortBy: z.enum(['createdAt','updatedAt','priority','status']).optional(),
-  sortOrder: z.enum(['asc','desc']).optional(),
+  sortBy: z.enum(["createdAt", "updatedAt", "priority", "status"]).optional(),
+  sortOrder: z.enum(["asc", "desc"]).optional(),
   page: z.coerce.number().int().min(1).optional(),
   pageSize: z.coerce.number().int().min(1).max(100).optional(),
 });
