@@ -1,0 +1,14 @@
+{
+  "name": "@helpdesk/shared",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "echo shared dev",
+    "build": "echo shared build",
+    "lint": "echo shared lint",
+    "typecheck": "echo shared typecheck"
+  },
+  "dependencies": {
+    "zod": "^4.1.3"
+  }
+}

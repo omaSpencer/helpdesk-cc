@@ -1,0 +1,12 @@
+{
+  "name": "@helpdesk/web",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "echo web dev",
+    "build": "echo web build",
+    "lint": "echo web lint",
+    "typecheck": "echo web typecheck",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\""
+  }
+}
