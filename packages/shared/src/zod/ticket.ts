@@ -36,7 +36,7 @@ export const ListQueryDTOSchema = z.object({
           : [],
     z.array(z.enum(TicketStatus)).optional()
   ),
-  priority: z.enum(TicketPriority).optional(),
+  priority: z.preprocess((val: string) => val?.toUpperCase(), z.enum(TicketPriority).optional()),
   sortBy: z.enum(["createdAt", "updatedAt", "priority", "status"]).optional(),
   sortOrder: z.enum(["asc", "desc"]).optional(),
   page: z.coerce.number().int().min(1).optional(),

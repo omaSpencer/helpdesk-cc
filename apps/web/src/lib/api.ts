@@ -2,10 +2,18 @@ export const API_BASE_URL = (import.meta as any).env.VITE_API_URL || "http://loc
 
 export async function fetchJson(input: RequestInfo | string, init?: RequestInit) {
   const url = String(input).startsWith("http") ? String(input) : API_BASE_URL + String(input);
+
+  let body = init?.body;
+  if (body && typeof body === "object" && !(body instanceof FormData)) {
+    body = JSON.stringify(body);
+  }
+
   const res = await fetch(url, {
-    headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
     ...init,
+    body,
+    headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
   });
+
   const isJson = res.headers.get("content-type")?.includes("application/json");
   if (!res.ok) {
     const err = isJson

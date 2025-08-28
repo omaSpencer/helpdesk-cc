@@ -18,19 +18,6 @@ export async function registerTicketRoutes(app: FastifyInstance) {
   // List tickets
   app.get(
     "/tickets",
-    {
-      schema: {
-        summary: "List tickets",
-        tags: ["tickets"],
-        // Use permissive schema for Fastify; Zod will validate inside handler
-        querystring: { type: "object", additionalProperties: true } as any,
-        response: {
-          200: { type: "object", additionalProperties: true } as any,
-          400: ErrorResponseSchema as any,
-          500: ErrorResponseSchema as any,
-        },
-      },
-    },
     async (request, reply) => {
       const query = ListQueryDTOSchema.parse(request.query);
       const { where, orderBy, skip, take, page, pageSize } = buildListQuery(query);
@@ -46,18 +33,6 @@ export async function registerTicketRoutes(app: FastifyInstance) {
   // Get by id with comments
   app.get(
     "/tickets/:id",
-    {
-      schema: {
-        summary: "Get ticket by id",
-        tags: ["tickets"],
-        params: zodToFastifySchema(ParamsId) as any,
-        response: {
-          200: { type: "object", additionalProperties: true } as any,
-          404: ErrorResponseSchema as any,
-          500: ErrorResponseSchema as any,
-        },
-      },
-    },
     async (request, reply) => {
       const { id } = ParamsId.parse(request.params);
       const ticket = await prisma.ticket.findUnique({ where: { id } });
@@ -77,18 +52,6 @@ export async function registerTicketRoutes(app: FastifyInstance) {
   // Create ticket
   app.post(
     "/tickets",
-    {
-      schema: {
-        summary: "Create ticket",
-        tags: ["tickets"],
-        body: zodToFastifySchema(CreateTicketDTOSchema) as any,
-        response: {
-          201: { type: "object", additionalProperties: true } as any,
-          400: ErrorResponseSchema as any,
-          409: ErrorResponseSchema as any,
-        },
-      },
-    },
     async (request, reply) => {
       const data = CreateTicketDTOSchema.parse(request.body);
       // Generate next ticket number: T-000001
@@ -108,19 +71,6 @@ export async function registerTicketRoutes(app: FastifyInstance) {
   // Update ticket
   app.patch(
     "/tickets/:id",
-    {
-      schema: {
-        summary: "Update ticket",
-        tags: ["tickets"],
-        params: zodToFastifySchema(ParamsId) as any,
-        body: zodToFastifySchema(UpdateTicketDTOSchema) as any,
-        response: {
-          200: { type: "object", additionalProperties: true } as any,
-          404: ErrorResponseSchema as any,
-          400: ErrorResponseSchema as any,
-        },
-      },
-    },
     async (request, reply) => {
       const { id } = ParamsId.parse(request.params);
       const data = UpdateTicketDTOSchema.parse(request.body);
@@ -139,17 +89,6 @@ export async function registerTicketRoutes(app: FastifyInstance) {
   // Delete ticket
   app.delete(
     "/tickets/:id",
-    {
-      schema: {
-        summary: "Delete ticket",
-        tags: ["tickets"],
-        params: zodToFastifySchema(ParamsId) as any,
-        response: {
-          204: { type: "null" } as any,
-          404: ErrorResponseSchema as any,
-        },
-      },
-    },
     async (request, reply) => {
       const { id } = ParamsId.parse(request.params);
       try {
@@ -168,19 +107,6 @@ export async function registerTicketRoutes(app: FastifyInstance) {
   // Add comment
   app.post(
     "/tickets/:id/comments",
-    {
-      schema: {
-        summary: "Add comment to ticket",
-        tags: ["tickets"],
-        params: zodToFastifySchema(ParamsId) as any,
-        body: zodToFastifySchema(CreateCommentDTOSchema) as any,
-        response: {
-          201: { type: "object", additionalProperties: true } as any,
-          404: ErrorResponseSchema as any,
-          400: ErrorResponseSchema as any,
-        },
-      },
-    },
     async (request, reply) => {
       const { id } = ParamsId.parse(request.params);
       const data = CreateCommentDTOSchema.parse(request.body);

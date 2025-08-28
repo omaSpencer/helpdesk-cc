@@ -8,7 +8,10 @@ import { registerErrorHandler } from "./errors/handler";
 const buildServer = async () => {
   const app = Fastify({ logger: true });
 
-  app.register(cors, { origin: true });
+  app.register(cors, {
+    origin: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  });
   // Register swagger BEFORE routes so it can hook into route registration
   app.register(swagger, {
     openapi: {
