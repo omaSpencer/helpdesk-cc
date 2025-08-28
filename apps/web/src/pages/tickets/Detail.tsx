@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { fetchJson } from "../../lib/api";
 import { CommentSchema, CreateCommentDTOSchema, TicketSchema } from "@helpdesk/shared";
 import { z } from "zod";
+
+import { fetchJson } from "@/lib/api";
 import { cn } from "@/lib/utils";
+
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,6 +40,8 @@ export function TicketDetailPage() {
     onSuccess: () => navigate("/"),
   });
 
+  const onDeleteTicket = () => deleteTicket.mutate();
+
   if (isLoading) return <div>Loading...</div>;
   if (!data) return <div>Not found</div>;
   const { ticket, comments } = data as {
@@ -46,7 +50,7 @@ export function TicketDetailPage() {
   };
 
   return (
-    <div className="grid gap-4 pt-4">
+    <div className="grid gap-4 pt-4 px-3">
       <div className="flex justify-between items-center">
         <div className="grid gap-2">
           <h1 className="text-2xl font-bold">
@@ -62,7 +66,9 @@ export function TicketDetailPage() {
           </Link>
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="destructive">Delete</Button>
+              <Button variant="destructive" disabled={deleteTicket.isPending}>
+                Delete
+              </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -73,7 +79,9 @@ export function TicketDetailPage() {
               </DialogHeader>
 
               <DialogFooter>
-                <Button onClick={() => deleteTicket.mutate()}>Delete</Button>
+                <Button onClick={onDeleteTicket} isPending={deleteTicket.isPending}>
+                  Delete
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -109,7 +117,7 @@ export function TicketDetailPage() {
           <div className="grid gap-2 max-w-sm">
             <Input name="author" placeholder="Your name" required />
             <Textarea name="body" placeholder="Add a comment..." required />
-            <Button type="submit" size="lg">
+            <Button type="submit" size="lg" isPending={addComment.isPending}>
               Add comment
             </Button>
           </div>

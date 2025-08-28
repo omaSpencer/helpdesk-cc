@@ -1,16 +1,30 @@
-import { useQuery } from "@tanstack/react-query";
-import { Link, useSearchParams } from "react-router-dom";
-import { fetchJson } from "../../lib/api";
-import { ListQueryDTOSchema, TicketSchema } from "@helpdesk/shared";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { CreateTicketDTOSchema, ListQueryDTOSchema, TicketSchema } from "@helpdesk/shared";
 import { z } from "zod";
-import { FiltersBar } from "../../components/FiltersBar";
-import { Pagination } from "../../components/Pagination";
-import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
+import { useMemo } from "react";
+
+import { fetchJson } from "@/lib/api";
+import { STATUS_COLORS } from "@/lib/constants";
+
+import { FiltersBar } from "@/components/FiltersBar";
+import { Pagination } from "@/components/Pagination";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { TicketForm } from "@/components/TicketForm";
 
 export function TicketsListPage() {
   const [params] = useSearchParams();
+  const navigate = useNavigate();
+
+  const showCreateNewDialog = useMemo(() => !!params.get("new"), [params]);
 
   const raw = {
     q: params.get("q") || undefined,
@@ -46,23 +60,46 @@ export function TicketsListPage() {
       ),
   });
 
+  const mutateCreteTicket = useMutation({
+    mutationFn: (input: z.infer<typeof CreateTicketDTOSchema>) =>
+      fetchJson("/tickets", { method: "POST", body: JSON.stringify(input) }),
+    onSuccess: (t: any) => navigate(`/tickets/${t.id}`),
+  });
+
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error loading tickets</div>;
 
   return (
-    <div className="grid gap-4 pt-4">
+    <div className="grid gap-4 pt-4 px-3">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Tickets</h1>
-        <Link to="/new" className={cn(buttonVariants())}>
-          New
-        </Link>
+        <Dialog defaultOpen={showCreateNewDialog}>
+          <DialogTrigger asChild>
+            <Button>New</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create new ticket</DialogTitle>
+            </DialogHeader>
+            <TicketForm
+              onSubmit={(d) => mutateCreteTicket.mutate(d)}
+              submitText="Create"
+              isPending={mutateCreteTicket.isPending}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
 
       <FiltersBar />
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
         {(data as any)?.items?.map((t: z.infer<typeof TicketSchema>) => (
-          <Card key={t.id}>
+          <Card
+            key={t.id}
+            style={{
+              backgroundColor: STATUS_COLORS[t.status].colorRGBA(42),
+            }}
+          >
             <CardContent>
               <Link to={`/tickets/${t.id}`} className="font-semibold">
                 {t.ticketNumber} — {t.title}

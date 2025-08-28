@@ -2,12 +2,13 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { queryClient } from "./lib/queryClient";
-import { AppLayout } from "./components/AppLayout";
-import { TicketsListPage } from "./pages/tickets/List";
-import { TicketDetailPage } from "./pages/tickets/Detail";
-import { TicketEditPage } from "./pages/tickets/Edit";
-import TicketNewPage from "./pages/tickets/New";
+
+import { queryClient } from "@/lib/queryClient";
+
+import { AppLayout } from "@/components/AppLayout";
+import { TicketsListPage } from "@/pages/tickets/List";
+import { TicketDetailPage } from "@/pages/tickets/Detail";
+import { TicketEditPage } from "@/pages/tickets/Edit";
 
 const router = createBrowserRouter([
   {
@@ -17,7 +18,6 @@ const router = createBrowserRouter([
       { path: "/tickets", element: <TicketsListPage /> },
       { path: "/tickets/:id", element: <TicketDetailPage /> },
       { path: "/tickets/:id/edit", element: <TicketEditPage /> },
-      { path: "/new", element: <TicketNewPage /> },
     ],
   },
 ]);

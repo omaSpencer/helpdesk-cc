@@ -1,13 +1,23 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDebounceValue } from "usehooks-ts";
-import { Input } from "./ui/input";
-import { MultiSelect } from "./ui/multi-select";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { TicketStatus } from "@helpdesk/shared";
+
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { StatusSelect, type StatusSelectOptions } from "@/components/StatusSelector";
 
 export function FiltersBar() {
   const [params, setParams] = useSearchParams();
-  const [status, setStatus] = useState<string[]>([]);
+  const [status, setStatus] = useState<TicketStatus[]>(
+    (params.getAll("status") as TicketStatus[]) ?? []
+  );
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   const [debouncedSearchQuery] = useDebounceValue(searchQuery, 300);
@@ -23,8 +33,11 @@ export function FiltersBar() {
     setParams(params, { replace: true });
   }
 
+  function onChangeStatus(selectedValues: StatusSelectOptions[]) {
+    setStatus(selectedValues.map((val) => val.value as TicketStatus));
+  }
+
   useEffect(() => {
-    if (!status.length) return;
     setParams({ ...params, status }, { replace: true });
   }, [status, params]);
 
@@ -35,40 +48,14 @@ export function FiltersBar() {
   }, [params, debouncedSearchQuery]);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-7 gap-3">
       <Input
         type="text"
         placeholder="Search..."
         defaultValue={params.get("q") || ""}
         onChange={(e) => setSearchQuery(e.target.value || "")}
       />
-      <MultiSelect
-        defaultValue={status}
-        options={[
-          {
-            label: "All status",
-            value: "none",
-          },
-          {
-            label: "Open",
-            value: "open",
-          },
-          {
-            label: "In Progress",
-            value: "in_progress",
-          },
-          {
-            label: "Resolved",
-            value: "resolved",
-          },
-          {
-            label: "Closed",
-            value: "closed",
-          },
-        ]}
-        onValueChange={(val) => (val[0] === "none" ? setStatus([]) : setStatus(val))}
-        className="min-h-0"
-      />
+      <StatusSelect defaultValues={status} onChange={onChangeStatus} />
       <Select
         onValueChange={(val) => setParam("priority", val || undefined)}
         value={params.get("priority") || ""}
