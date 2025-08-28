@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDebounceValue } from "usehooks-ts";
+import { Input } from "./ui/input";
+import { MultiSelect } from "./ui/multi-select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 export function FiltersBar() {
   const [params, setParams] = useSearchParams();
@@ -10,7 +13,9 @@ export function FiltersBar() {
   const [debouncedSearchQuery] = useDebounceValue(searchQuery, 300);
 
   function setParam(key: string, value?: string) {
-    if (value) {
+    if (value === "none") {
+      params.delete(key);
+    } else if (value) {
       params.set(key, value);
     } else {
       params.delete(key);
@@ -30,51 +35,81 @@ export function FiltersBar() {
   }, [params, debouncedSearchQuery]);
 
   return (
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-      <input
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3">
+      <Input
         type="text"
         placeholder="Search..."
         defaultValue={params.get("q") || ""}
-        onChange={(e) => setSearchQuery(e.target.value || '')}
-        style={{ padding: 6, border: "1px solid #ddd", borderRadius: 4 }}
+        onChange={(e) => setSearchQuery(e.target.value || "")}
       />
-      <select
-        value={params.getAll("status") ?? ""}
-        onChange={(e) => setStatus((prev) => [...prev, e.target.value])}
-        multiple
-      >
-        <option value="">All status</option>
-        <option value="open">Open</option>
-        <option value="in_progress">In Progress</option>
-        <option value="resolved">Resolved</option>
-        <option value="closed">Closed</option>
-      </select>
-      <select
+      <MultiSelect
+        defaultValue={status}
+        options={[
+          {
+            label: "All status",
+            value: "none",
+          },
+          {
+            label: "Open",
+            value: "open",
+          },
+          {
+            label: "In Progress",
+            value: "in_progress",
+          },
+          {
+            label: "Resolved",
+            value: "resolved",
+          },
+          {
+            label: "Closed",
+            value: "closed",
+          },
+        ]}
+        onValueChange={(val) => (val[0] === "none" ? setStatus([]) : setStatus(val))}
+        className="min-h-0"
+      />
+      <Select
+        onValueChange={(val) => setParam("priority", val || undefined)}
         value={params.get("priority") || ""}
-        onChange={(e) => setParam("priority", e.target.value || undefined)}
       >
-        <option value="">All priority</option>
-        <option value="low">Low</option>
-        <option value="medium">Medium</option>
-        <option value="high">High</option>
-      </select>
-      <select
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="All priority" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">All priority</SelectItem>
+          <SelectItem value="low">Low</SelectItem>
+          <SelectItem value="medium">Medium</SelectItem>
+          <SelectItem value="high">High</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select
         value={params.get("sortBy") || ""}
-        onChange={(e) => setParam("sortBy", e.target.value || undefined)}
+        onValueChange={(val) => setParam("sortBy", val || undefined)}
       >
-        <option value="">Sort by</option>
-        <option value="createdAt">Created</option>
-        <option value="updatedAt">Updated</option>
-        <option value="priority">Priority</option>
-        <option value="status">Status</option>
-      </select>
-      <select
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Sort by" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">Sort by</SelectItem>
+          <SelectItem value="createdAt">Created</SelectItem>
+          <SelectItem value="updatedAt">Updated</SelectItem>
+          <SelectItem value="priority">Priority</SelectItem>
+          <SelectItem value="status">Status</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select
         value={params.get("sortOrder") || ""}
-        onChange={(e) => setParam("sortOrder", e.target.value || undefined)}
+        onValueChange={(val) => setParam("sortOrder", val || undefined)}
       >
-        <option value="asc">Asc</option>
-        <option value="desc">Desc</option>
-      </select>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Desc" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="asc">Asc</SelectItem>
+          <SelectItem value="desc">Desc</SelectItem>
+        </SelectContent>
+      </Select>
     </div>
   );
 }

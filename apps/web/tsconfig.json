@@ -6,10 +6,9 @@
     "baseUrl": ".",
     "paths": {
       "@helpdesk/shared": ["../../packages/shared/src"],
-      "@helpdesk/shared/*": ["../../packages/shared/src/*"]
+      "@helpdesk/shared/*": ["../../packages/shared/src/*"],
+      "@/*": ["./src/*"]
     }
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }

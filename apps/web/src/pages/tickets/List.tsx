@@ -5,6 +5,9 @@ import { ListQueryDTOSchema, TicketSchema } from "@helpdesk/shared";
 import { z } from "zod";
 import { FiltersBar } from "../../components/FiltersBar";
 import { Pagination } from "../../components/Pagination";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 export function TicketsListPage() {
   const [params] = useSearchParams();
@@ -47,28 +50,30 @@ export function TicketsListPage() {
   if (error) return <div>Error loading tickets</div>;
 
   return (
-    <div style={{ display: "grid", gap: 12 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1 style={{ fontSize: 20, fontWeight: 700 }}>Tickets</h1>
-        <Link to="/new" style={{ padding: "8px 12px", border: "1px solid #ddd", borderRadius: 6 }}>
+    <div className="grid gap-4 pt-4">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Tickets</h1>
+        <Link to="/new" className={cn(buttonVariants())}>
           New
         </Link>
       </div>
 
       <FiltersBar />
 
-      <ul style={{ display: "grid", gap: 8 }}>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
         {(data as any)?.items?.map((t: z.infer<typeof TicketSchema>) => (
-          <li key={t.id} style={{ padding: 12, border: "1px solid #eee", borderRadius: 8 }}>
-            <Link to={`/tickets/${t.id}`} style={{ fontWeight: 600 }}>
-              {t.ticketNumber} — {t.title}
-            </Link>
-            <div style={{ fontSize: 12, color: "#666" }}>
-              {t.status} • {t.priority}
-            </div>
-          </li>
+          <Card key={t.id}>
+            <CardContent>
+              <Link to={`/tickets/${t.id}`} className="font-semibold">
+                {t.ticketNumber} — {t.title}
+              </Link>
+              <div className="text-xs text-muted-foreground">
+                {t.status} • {t.priority}
+              </div>
+            </CardContent>
+          </Card>
         ))}
-      </ul>
+      </div>
 
       <Pagination page={(data as any)?.page} totalPages={(data as any)?.totalPages} />
     </div>

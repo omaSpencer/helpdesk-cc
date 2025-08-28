@@ -3,6 +3,11 @@ import { Link, useParams } from "react-router-dom";
 import { fetchJson } from "../../lib/api";
 import { CommentSchema, CreateCommentDTOSchema, TicketSchema } from "@helpdesk/shared";
 import { z } from "zod";
+import { cn } from "@/lib/utils";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 
 export function TicketDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -26,31 +31,36 @@ export function TicketDetailPage() {
   };
 
   return (
-    <div style={{ display: "grid", gap: 16 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1 style={{ fontSize: 20, fontWeight: 700 }}>
-          {ticket.ticketNumber} — {ticket.title}
-        </h1>
-        <Link
-          to={`/tickets/${id}/edit`}
-          style={{ padding: "8px 12px", border: "1px solid #ddd", borderRadius: 6 }}
-        >
+    <div className="grid gap-4 pt-4">
+      <div className="flex justify-between items-center">
+        <div className="grid gap-2">
+          <h1 className="text-2xl font-bold">
+            {ticket.ticketNumber} — {ticket.title}
+          </h1>
+          <div>
+            {ticket.status} - {ticket.priority}
+          </div>
+        </div>
+        <Link to={`/tickets/${id}/edit`} className={cn(buttonVariants())}>
           Edit
         </Link>
       </div>
       <p>{ticket.description}</p>
-      <div style={{ display: "grid", gap: 8 }}>
-        <h2 style={{ fontWeight: 600 }}>Comments</h2>
-        <ul style={{ display: "grid", gap: 8 }}>
+      <div className="grid gap-4">
+        <h2 className="font-semibold">Comments</h2>
+        <ul className="grid gap-2">
           {comments.map((c) => (
-            <li key={c.id} style={{ padding: 8, border: "1px solid #eee", borderRadius: 6 }}>
-              <div style={{ fontSize: 12, color: "#666" }}>
+            <li key={c.id} className="p-2 border border-border rounded-sm">
+              <div className="text-sm text-muted-foreground">
                 {c.author} · {new Date(c.createdAt).toLocaleString()}
               </div>
               <div>{c.body}</div>
             </li>
           ))}
         </ul>
+
+        <Separator />
+
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -62,25 +72,12 @@ export function TicketDetailPage() {
             (e.currentTarget as HTMLFormElement).reset();
           }}
         >
-          <div style={{ display: "grid", gap: 8, maxWidth: 560 }}>
-            <input
-              name="author"
-              placeholder="Your name"
-              required
-              style={{ padding: 8, border: "1px solid #ddd", borderRadius: 6 }}
-            />
-            <textarea
-              name="body"
-              placeholder="Add a comment..."
-              required
-              style={{ padding: 8, border: "1px solid #ddd", borderRadius: 6 }}
-            />
-            <button
-              type="submit"
-              style={{ padding: "8px 12px", border: "1px solid #ddd", borderRadius: 6 }}
-            >
+          <div className="grid gap-2 max-w-sm">
+            <Input name="author" placeholder="Your name" required />
+            <Textarea name="body" placeholder="Add a comment..." required />
+            <Button type="submit" size="lg">
               Add comment
-            </button>
+            </Button>
           </div>
         </form>
       </div>

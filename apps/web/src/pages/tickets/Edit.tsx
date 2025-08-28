@@ -3,6 +3,16 @@ import { useNavigate, useParams } from "react-router-dom";
 import { fetchJson } from "../../lib/api";
 import { CreateTicketDTOSchema, TicketSchema, UpdateTicketDTOSchema } from "@helpdesk/shared";
 import { z } from "zod";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 export function TicketEditPage() {
   const { id } = useParams<{ id: string }>();
@@ -55,40 +65,30 @@ function TicketForm({
           priority: String(fd.get("priority") || "MEDIUM"),
         });
       }}
+      className="pt-4 grid gap-3 max-w-md mx-auto"
     >
-      <div style={{ display: "grid", gap: 12, maxWidth: 640 }}>
-        <input
-          name="title"
-          placeholder="Title"
-          defaultValue={initial?.title}
-          required
-          style={{ padding: 8, border: "1px solid #ddd", borderRadius: 6 }}
-        />
-        <textarea
-          name="description"
-          placeholder="Description"
-          defaultValue={initial?.description}
-          required
-          style={{ padding: 8, border: "1px solid #ddd", borderRadius: 6 }}
-        />
-        <select
-          name="priority"
-          defaultValue={initial?.priority || "MEDIUM"}
-          style={{ padding: 8, border: "1px solid #ddd", borderRadius: 6 }}
-        >
-          <option value="LOW">LOW</option>
-          <option value="MEDIUM">MEDIUM</option>
-          <option value="HIGH">HIGH</option>
-          <option value="URGENT">URGENT</option>
-        </select>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button
-            type="submit"
-            style={{ padding: "8px 12px", border: "1px solid #ddd", borderRadius: 6 }}
-          >
-            Save
-          </button>
-        </div>
+      <Input name="title" placeholder="Title" defaultValue={initial?.title} required />
+      <Textarea
+        name="description"
+        placeholder="Description"
+        defaultValue={initial?.description}
+        required
+      />
+      <Select name="priority" defaultValue={initial?.priority || "MEDIUM"}>
+        <SelectTrigger className="w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="LOW">LOW</SelectItem>
+          <SelectItem value="MEDIUM">MEDIUM</SelectItem>
+          <SelectItem value="HIGH">HIGH</SelectItem>
+          <SelectItem value="URGENT">URGENT</SelectItem>
+        </SelectContent>
+      </Select>
+      <div style={{ display: "flex", gap: 8 }}>
+        <Button type="submit" size="lg">
+          Save
+        </Button>
       </div>
     </form>
   );
