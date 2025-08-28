@@ -11,7 +11,10 @@ export async function fetchJson(input: RequestInfo | string, init?: RequestInit)
   const res = await fetch(url, {
     ...init,
     body,
-    headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
+    headers:
+      init?.method !== "DELETE"
+        ? { "Content-Type": "application/json", ...(init?.headers || {}) }
+        : init?.headers,
   });
 
   const isJson = res.headers.get("content-type")?.includes("application/json");

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { fetchJson } from "../../lib/api";
 import { CommentSchema, CreateCommentDTOSchema, TicketSchema } from "@helpdesk/shared";
 import { z } from "zod";
@@ -8,9 +8,19 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export function TicketDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["ticket", id],
@@ -21,6 +31,11 @@ export function TicketDetailPage() {
     mutationFn: (input: z.infer<typeof CreateCommentDTOSchema>) =>
       fetchJson(`/tickets/${id}/comments`, { method: "POST", body: JSON.stringify(input) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["ticket", id] }),
+  });
+
+  const deleteTicket = useMutation({
+    mutationFn: () => fetchJson(`/tickets/${id}`, { method: "DELETE" }),
+    onSuccess: () => navigate("/"),
   });
 
   if (isLoading) return <div>Loading...</div>;
@@ -41,9 +56,28 @@ export function TicketDetailPage() {
             {ticket.status} - {ticket.priority}
           </div>
         </div>
-        <Link to={`/tickets/${id}/edit`} className={cn(buttonVariants())}>
-          Edit
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link to={`/tickets/${id}/edit`} className={cn(buttonVariants())}>
+            Edit
+          </Link>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="destructive">Delete</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete {ticket.title}</DialogTitle>
+                <DialogDescription>
+                  Are you sure delete <span className="font-semibold">{ticket.title}</span> ticket?
+                </DialogDescription>
+              </DialogHeader>
+
+              <DialogFooter>
+                <Button onClick={() => deleteTicket.mutate()}>Delete</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
       <p>{ticket.description}</p>
       <div className="grid gap-4">

@@ -27,7 +27,7 @@ A fullstack ticket management system built with **Fastify**, **Prisma**, **Postg
 1. Install dependencies:
 
    ```bash
-   cd backend
+   cd apps/api
    npm install
    ```
 
@@ -56,7 +56,7 @@ A fullstack ticket management system built with **Fastify**, **Prisma**, **Postg
 1. Install dependencies:
 
    ```bash
-   cd frontend
+   cd apps/web
    npm install
    ```
 
