@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useDebounceValue } from "usehooks-ts";
 
 export function FiltersBar() {
   const [params, setParams] = useSearchParams();
   const [status, setStatus] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
+  const [debouncedSearchQuery] = useDebounceValue(searchQuery, 300);
 
   function setParam(key: string, value?: string) {
     if (value) {
@@ -15,8 +19,15 @@ export function FiltersBar() {
   }
 
   useEffect(() => {
+    if (!status.length) return;
     setParams({ ...params, status }, { replace: true });
-  }, [status]);
+  }, [status, params]);
+
+  useEffect(() => {
+    if (searchQuery.length > 0) {
+      setParams({ ...params, q: debouncedSearchQuery }, { replace: true });
+    }
+  }, [params, debouncedSearchQuery]);
 
   return (
     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -24,7 +35,7 @@ export function FiltersBar() {
         type="text"
         placeholder="Search..."
         defaultValue={params.get("q") || ""}
-        onChange={(e) => setParam("q", e.target.value || undefined)}
+        onChange={(e) => setSearchQuery(e.target.value || '')}
         style={{ padding: 6, border: "1px solid #ddd", borderRadius: 4 }}
       />
       <select
